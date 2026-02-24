@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug EC2 key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" | head -n 3
+
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.6
         with:
