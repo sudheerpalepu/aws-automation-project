@@ -1,0 +1,36 @@
+name: Deploy Web App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "~/webapp/"
+
+      - name: SSH and restart Docker container
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd ~/webapp
+            sudo docker build -t webapp .
+            sudo docker stop webapp || true
+            sudo docker rm webapp || true
+            sudo docker run -d --restart unless-stopped -p 80:80 --name webapp webapp
